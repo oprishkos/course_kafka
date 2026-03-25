@@ -1,0 +1,2391 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kafka — Полный курс на русском</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Unbounded:wght@400;700;900&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg2: #10141c;
+    --bg3: #161b27;
+    --border: #1e2535;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --accent3: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --text3: #64748b;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    min-height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    overflow-y: auto;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 18px;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: -0.5px;
+  }
+
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 4px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .progress-bar-wrap {
+    margin-top: 14px;
+  }
+
+  .progress-label {
+    font-size: 11px;
+    color: var(--text3);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+  }
+
+  .nav-section {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-section-title {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+    padding: 0 20px 10px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 3px solid transparent;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text2);
+  }
+
+  .nav-item:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .nav-item.active {
+    background: rgba(0, 212, 255, 0.06);
+    border-left-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .nav-item.done {
+    color: var(--green);
+  }
+
+  .nav-item.done .nav-icon { color: var(--green); }
+
+  .nav-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--border);
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 700;
+  }
+
+  .nav-item.active .nav-num {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .nav-item.done .nav-num {
+    background: var(--green);
+    color: var(--bg);
+  }
+
+  /* Main */
+  .main {
+    margin-left: 280px;
+    flex: 1;
+    min-height: 100vh;
+  }
+
+  .lesson {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .lesson.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .lesson-header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 32px 48px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .lesson-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(0,212,255,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .lesson-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--accent);
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 14px;
+  }
+
+  .lesson-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+
+  .lesson-desc {
+    color: var(--text2);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 600px;
+  }
+
+  .lesson-body {
+    padding: 40px 48px;
+    max-width: 860px;
+  }
+
+  /* Content blocks */
+  h2 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 36px 0 16px;
+    color: var(--text);
+  }
+
+  h2:first-child { margin-top: 0; }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 24px 0 10px;
+    color: var(--accent);
+  }
+
+  p {
+    color: var(--text2);
+    line-height: 1.8;
+    margin-bottom: 14px;
+    font-size: 14.5px;
+  }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  /* Info cards */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin: 20px 0;
+  }
+
+  .card.info {
+    border-left: 3px solid var(--accent);
+    background: rgba(0,212,255,0.04);
+  }
+
+  .card.warning {
+    border-left: 3px solid var(--accent3);
+    background: rgba(245,158,11,0.04);
+  }
+
+  .card.success {
+    border-left: 3px solid var(--green);
+    background: rgba(16,185,129,0.04);
+  }
+
+  .card-title {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .card.info .card-title { color: var(--accent); }
+  .card.warning .card-title { color: var(--accent3); }
+  .card.success .card-title { color: var(--green); }
+
+  /* Code blocks */
+  pre {
+    background: #060810;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-lang);
+    position: absolute;
+    top: 8px; right: 12px;
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #a8b8d8;
+  }
+
+  .kw { color: #7c3aed; }
+  .str { color: #10b981; }
+  .cm { color: #475569; }
+  .num { color: var(--accent3); }
+  .fn { color: #60a5fa; }
+  .cls { color: var(--accent); }
+
+  /* Concept grid */
+  .concept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+
+  .concept-card {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.2s;
+  }
+
+  .concept-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .concept-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .concept-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+
+  .concept-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+
+  /* Diagram */
+  .diagram {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  .diagram-flow {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    flex-wrap: nowrap;
+    min-width: max-content;
+  }
+
+  .diagram-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+    min-width: 100px;
+  }
+
+  .diagram-box.highlight {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0,212,255,0.1);
+  }
+
+  .diagram-box.highlight2 {
+    border-color: var(--accent2);
+    box-shadow: 0 0 20px rgba(124,58,237,0.1);
+  }
+
+  .diagram-box.highlight3 {
+    border-color: var(--green);
+    box-shadow: 0 0 20px rgba(16,185,129,0.1);
+  }
+
+  .box-label {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .box-name {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .diagram-arrow {
+    padding: 0 8px;
+    color: var(--text3);
+    font-size: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .arrow-label {
+    font-size: 9px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  /* Quiz */
+  .quiz {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px;
+    margin: 28px 0;
+  }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+
+  .quiz-badge {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent3);
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.2);
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+
+  .quiz-q {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+
+  .quiz-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .quiz-opt {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    cursor: pointer;
+    font-size: 13.5px;
+    color: var(--text2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .quiz-opt:hover:not(.disabled) {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .quiz-opt.correct {
+    border-color: var(--green);
+    background: rgba(16,185,129,0.08);
+    color: var(--green);
+  }
+
+  .quiz-opt.wrong {
+    border-color: var(--red);
+    background: rgba(239,68,68,0.08);
+    color: var(--red);
+  }
+
+  .quiz-opt.disabled { cursor: default; }
+
+  .quiz-result {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    display: none;
+  }
+
+  .quiz-result.show { display: block; }
+  .quiz-result.correct-res { background: rgba(16,185,129,0.1); color: var(--green); border: 1px solid rgba(16,185,129,0.2); }
+  .quiz-result.wrong-res { background: rgba(239,68,68,0.1); color: #f87171; border: 1px solid rgba(239,68,68,0.2); }
+
+  /* Nav buttons */
+  .lesson-nav {
+    padding: 0 48px 48px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Manrope', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #0099bb);
+    color: var(--bg);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0,212,255,0.3);
+  }
+
+  .btn-secondary {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13.5px;
+  }
+
+  th {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    font-weight: 600;
+  }
+
+  td {
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    color: var(--text2);
+  }
+
+  tr:nth-child(even) td { background: rgba(255,255,255,0.02); }
+
+  /* Steps */
+  .steps { margin: 20px 0; }
+
+  .step {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: var(--bg);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-content {}
+  .step-title { font-weight: 600; margin-bottom: 4px; }
+  .step-desc { font-size: 13.5px; color: var(--text2); line-height: 1.7; }
+
+  /* Home screen */
+  .home {
+    padding: 60px 48px;
+    max-width: 800px;
+  }
+
+  .home-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    line-height: 1.2;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--text), var(--text2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-title span {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .home-sub {
+    font-size: 16px;
+    color: var(--text2);
+    line-height: 1.8;
+    margin-bottom: 40px;
+    max-width: 560px;
+  }
+
+  .modules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+
+  .module-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .module-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .module-card:hover {
+    border-color: rgba(0,212,255,0.3);
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+
+  .module-card:hover::after { opacity: 1; }
+
+  .module-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text3);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .module-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+
+  .module-topics {
+    font-size: 12px;
+    color: var(--text3);
+    line-height: 1.6;
+  }
+
+  /* Mobile toggle */
+  .sidebar-toggle {
+    display: none;
+    position: fixed;
+    top: 16px; left: 16px;
+    z-index: 200;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 16px;
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      transform: translateX(-100%);
+      transition: transform 0.3s;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .main { margin-left: 0; }
+    .lesson-header, .lesson-body, .lesson-nav { padding-left: 20px; padding-right: 20px; }
+    .home { padding: 60px 20px 40px; }
+    .sidebar-toggle { display: block; }
+    .home-title { font-size: 26px; }
+  }
+
+  ul { padding-left: 20px; margin-bottom: 14px; }
+  li { color: var(--text2); font-size: 14.5px; line-height: 1.8; margin-bottom: 4px; }
+
+  .tag {
+    display: inline-block;
+    background: rgba(0,212,255,0.1);
+    border: 1px solid rgba(0,212,255,0.2);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  .partition-vis {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .partition {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    min-width: 120px;
+    flex: 1;
+  }
+
+  .partition-title {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .message-bubble {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .message-bubble.offset-0 { border-left: 2px solid #60a5fa; }
+  .message-bubble.offset-1 { border-left: 2px solid var(--accent2); }
+  .message-bubble.offset-2 { border-left: 2px solid var(--accent3); }
+  .message-bubble.offset-3 { border-left: 2px solid var(--green); }
+</style>
+</head>
+<body>
+
+<button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">Apache Kafka</div>
+    <div class="logo-sub">Полный курс на русском</div>
+    <div class="progress-bar-wrap">
+      <div class="progress-label">
+        <span>Прогресс</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Навигация</div>
+    <div class="nav-item active" data-lesson="home" onclick="showLesson('home')">
+      <div class="nav-num">🏠</div>
+      <span>Обзор курса</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Модуль 1 — Основы</div>
+    <div class="nav-item" data-lesson="1" onclick="showLesson('1')">
+      <div class="nav-num">1</div>
+      <span>Что такое Kafka?</span>
+    </div>
+    <div class="nav-item" data-lesson="2" onclick="showLesson('2')">
+      <div class="nav-num">2</div>
+      <span>Ключевые концепции</span>
+    </div>
+    <div class="nav-item" data-lesson="3" onclick="showLesson('3')">
+      <div class="nav-num">3</div>
+      <span>Архитектура</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Модуль 2 — Практика</div>
+    <div class="nav-item" data-lesson="4" onclick="showLesson('4')">
+      <div class="nav-num">4</div>
+      <span>Установка и запуск</span>
+    </div>
+    <div class="nav-item" data-lesson="5" onclick="showLesson('5')">
+      <div class="nav-num">5</div>
+      <span>Producer — отправка</span>
+    </div>
+    <div class="nav-item" data-lesson="6" onclick="showLesson('6')">
+      <div class="nav-num">6</div>
+      <span>Consumer — чтение</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Модуль 3 — Углублённо</div>
+    <div class="nav-item" data-lesson="7" onclick="showLesson('7')">
+      <div class="nav-num">7</div>
+      <span>Partitions & Offsets</span>
+    </div>
+    <div class="nav-item" data-lesson="8" onclick="showLesson('8')">
+      <div class="nav-num">8</div>
+      <span>Consumer Groups</span>
+    </div>
+    <div class="nav-item" data-lesson="9" onclick="showLesson('9')">
+      <div class="nav-num">9</div>
+      <span>Надёжность данных</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-section-title">Модуль 4 — Продвинутый</div>
+    <div class="nav-item" data-lesson="10" onclick="showLesson('10')">
+      <div class="nav-num">10</div>
+      <span>Kafka Streams</span>
+    </div>
+    <div class="nav-item" data-lesson="11" onclick="showLesson('11')">
+      <div class="nav-num">11</div>
+      <span>Kafka Connect</span>
+    </div>
+    <div class="nav-item" data-lesson="12" onclick="showLesson('12')">
+      <div class="nav-num">12</div>
+      <span>Kafka в продакшн</span>
+    </div>
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- HOME -->
+  <div class="lesson active" id="lesson-home">
+    <div class="home">
+      <div class="lesson-tag">Курс</div>
+      <div class="home-title">Изучи <span>Apache Kafka</span><br>с нуля до про</div>
+      <div class="home-sub">Полный курс на русском языке. Без воды — только практика и понятные объяснения. От «что это вообще?» до продакшн-конфигурации.</div>
+
+      <div class="modules-grid">
+        <div class="module-card" onclick="showLesson('1')">
+          <div class="module-num">Урок 01</div>
+          <div class="module-title">Что такое Kafka?</div>
+          <div class="module-topics">Зачем она нужна, где используется, какие проблемы решает</div>
+        </div>
+        <div class="module-card" onclick="showLesson('2')">
+          <div class="module-num">Урок 02</div>
+          <div class="module-title">Ключевые концепции</div>
+          <div class="module-topics">Topic, Producer, Consumer, Broker, Partition</div>
+        </div>
+        <div class="module-card" onclick="showLesson('3')">
+          <div class="module-num">Урок 03</div>
+          <div class="module-title">Архитектура</div>
+          <div class="module-topics">Как всё устроено изнутри, кластер, Zookeeper / KRaft</div>
+        </div>
+        <div class="module-card" onclick="showLesson('4')">
+          <div class="module-num">Урок 04</div>
+          <div class="module-title">Установка и запуск</div>
+          <div class="module-topics">Docker, docker-compose, первые команды CLI</div>
+        </div>
+        <div class="module-card" onclick="showLesson('5')">
+          <div class="module-num">Урок 05</div>
+          <div class="module-title">Producer</div>
+          <div class="module-topics">Отправка сообщений на Python и Java</div>
+        </div>
+        <div class="module-card" onclick="showLesson('6')">
+          <div class="module-num">Урок 06</div>
+          <div class="module-title">Consumer</div>
+          <div class="module-topics">Чтение сообщений, подписка, обработка</div>
+        </div>
+        <div class="module-card" onclick="showLesson('7')">
+          <div class="module-num">Урок 07</div>
+          <div class="module-title">Partitions & Offsets</div>
+          <div class="module-topics">Как хранятся данные, параллельность, порядок</div>
+        </div>
+        <div class="module-card" onclick="showLesson('8')">
+          <div class="module-num">Урок 08</div>
+          <div class="module-title">Consumer Groups</div>
+          <div class="module-topics">Балансировка нагрузки, rebalance, lag</div>
+        </div>
+        <div class="module-card" onclick="showLesson('9')">
+          <div class="module-num">Урок 09</div>
+          <div class="module-title">Надёжность</div>
+          <div class="module-topics">Репликация, acks, exactly-once семантика</div>
+        </div>
+        <div class="module-card" onclick="showLesson('10')">
+          <div class="module-num">Урок 10</div>
+          <div class="module-title">Kafka Streams</div>
+          <div class="module-topics">Обработка потоков данных в реальном времени</div>
+        </div>
+        <div class="module-card" onclick="showLesson('11')">
+          <div class="module-num">Урок 11</div>
+          <div class="module-title">Kafka Connect</div>
+          <div class="module-topics">Интеграция с базами данных и внешними системами</div>
+        </div>
+        <div class="module-card" onclick="showLesson('12')">
+          <div class="module-num">Урок 12</div>
+          <div class="module-title">Kafka в продакшн</div>
+          <div class="module-topics">Мониторинг, настройки, типичные ошибки</div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="showLesson('1')">
+        ▶ Начать с урока 1
+      </button>
+    </div>
+  </div>
+
+  <!-- УРОК 1 -->
+  <div class="lesson" id="lesson-1">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 01 · Введение</div>
+      <div class="lesson-title">Что такое Apache Kafka?</div>
+      <div class="lesson-desc">Разбираемся зачем она нужна, какие проблемы решает и где применяется в реальных компаниях.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Проблема, которую решает Kafka</h2>
+      <p>Представь, что у тебя есть интернет-магазин. Когда пользователь делает заказ, нужно:</p>
+      <ul>
+        <li>Сохранить заказ в базу данных</li>
+        <li>Отправить email-подтверждение</li>
+        <li>Обновить статистику для аналитиков</li>
+        <li>Уведомить склад</li>
+        <li>Начислить бонусы пользователю</li>
+      </ul>
+
+      <p>Без Kafka ты вызываешь каждый сервис напрямую — и получаешь <strong>сильную связанность</strong>. Если email-сервис упадёт, заказ не сохранится.</p>
+
+      <div class="diagram">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">❌ Без Kafka — всё зависит от всего</p>
+        <div class="diagram-flow">
+          <div class="diagram-box highlight">
+            <div class="box-label">Сервис</div>
+            <div class="box-name">Заказы</div>
+          </div>
+          <div class="diagram-arrow">→<div class="arrow-label">прямой вызов</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="diagram-box"><div class="box-name" style="font-size:11px">Email сервис</div></div>
+            <div class="diagram-box"><div class="box-name" style="font-size:11px">Аналитика</div></div>
+            <div class="diagram-box"><div class="box-name" style="font-size:11px">Склад</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="diagram">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">✅ С Kafka — слабая связанность</p>
+        <div class="diagram-flow">
+          <div class="diagram-box highlight">
+            <div class="box-label">Producer</div>
+            <div class="box-name">Заказы</div>
+          </div>
+          <div class="diagram-arrow">→<div class="arrow-label">пишет</div></div>
+          <div class="diagram-box highlight2">
+            <div class="box-label">Kafka</div>
+            <div class="box-name">Topic: orders</div>
+          </div>
+          <div class="diagram-arrow">→<div class="arrow-label">читают</div></div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="diagram-box highlight3"><div class="box-name" style="font-size:11px">Email</div></div>
+            <div class="diagram-box highlight3"><div class="box-name" style="font-size:11px">Аналитика</div></div>
+            <div class="diagram-box highlight3"><div class="box-name" style="font-size:11px">Склад</div></div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Что такое Kafka?</h2>
+      <p><strong>Apache Kafka</strong> — это распределённая платформа для потоковой передачи данных. Проще говоря — это очень быстрая и надёжная <strong>очередь сообщений</strong>, в которую одни сервисы пишут, а другие читают.</p>
+
+      <div class="card info">
+        <div class="card-title">💡 Аналогия</div>
+        <p style="margin:0;font-size:13.5px">Представь Kafka как <strong>ленту новостей</strong> в соцсети. Один человек публикует пост (Producer), а сотни подписчиков читают его в удобное для них время (Consumer). Kafka хранит все посты в хронологическом порядке.</p>
+      </div>
+
+      <h2>Где используется Kafka?</h2>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="concept-icon">🏦</div>
+          <div class="concept-name">Финтех</div>
+          <div class="concept-desc">Обработка транзакций в реальном времени, обнаружение мошенничества</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🛒</div>
+          <div class="concept-name">E-commerce</div>
+          <div class="concept-desc">Заказы, инвентарь, аналитика пользователей</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🎮</div>
+          <div class="concept-name">Игры</div>
+          <div class="concept-desc">Игровые события, лидерборды, аналитика игроков</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🚗</div>
+          <div class="concept-name">IoT</div>
+          <div class="concept-desc">Данные с датчиков, телеметрия автомобилей</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📊</div>
+          <div class="concept-name">Big Data</div>
+          <div class="concept-desc">Стриминг данных в Spark, Flink, ClickHouse</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🌐</div>
+          <div class="concept-name">Соцсети</div>
+          <div class="concept-desc">LinkedIn, Twitter/X используют Kafka для миллиардов событий</div>
+        </div>
+      </div>
+
+      <h2>Ключевые преимущества</h2>
+      <table>
+        <tr><th>Характеристика</th><th>Что это значит</th></tr>
+        <tr><td><strong>Высокая пропускная способность</strong></td><td>Миллионы сообщений в секунду</td></tr>
+        <tr><td><strong>Устойчивость к сбоям</strong></td><td>Данные реплицируются на несколько серверов</td></tr>
+        <tr><td><strong>Хранение данных</strong></td><td>Сообщения хранятся на диске (не теряются)</td></tr>
+        <tr><td><strong>Масштабируемость</strong></td><td>Легко добавить новые серверы в кластер</td></tr>
+        <tr><td><strong>Replay</strong></td><td>Можно перечитать старые сообщения</td></tr>
+      </table>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ Когда Kafka НЕ нужна</div>
+        <p style="margin:0;font-size:13.5px">Kafka — это не серебряная пуля. Если у тебя маленький проект и нагрузка в несколько запросов в секунду — достаточно простой очереди (RabbitMQ, Redis Streams или даже просто БД).</p>
+      </div>
+
+      <div class="quiz">
+        <div class="quiz-header">
+          <span class="quiz-badge">⚡ Проверка знаний</span>
+        </div>
+        <div class="quiz-q">Какое ключевое преимущество даёт Kafka по сравнению с прямыми вызовами между сервисами?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q1')">Kafka работает быстрее SQL запросов</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q1')">Сервисы становятся независимы друг от друга (слабая связанность)</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q1')">Kafka автоматически пишет код для сервисов</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q1')">Kafka заменяет базы данных</div>
+        </div>
+        <div class="quiz-result" id="q1-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('home')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('1', '2')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 2 -->
+  <div class="lesson" id="lesson-2">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 02 · Основы</div>
+      <div class="lesson-title">Ключевые концепции Kafka</div>
+      <div class="lesson-desc">Разбираем терминологию: Topic, Producer, Consumer, Broker, Partition, Offset. Без этого дальше двигаться сложно.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Основные понятия</h2>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="concept-icon">📌</div>
+          <div class="concept-name">Topic</div>
+          <div class="concept-desc">Категория/канал, в который пишутся сообщения. Как таблица в БД, но для потоков.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📤</div>
+          <div class="concept-name">Producer</div>
+          <div class="concept-desc">Приложение, которое отправляет сообщения в topic.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📥</div>
+          <div class="concept-name">Consumer</div>
+          <div class="concept-desc">Приложение, которое читает сообщения из topic.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🖥️</div>
+          <div class="concept-name">Broker</div>
+          <div class="concept-desc">Сервер Kafka. Хранит данные и обслуживает запросы.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📦</div>
+          <div class="concept-name">Partition</div>
+          <div class="concept-desc">Раздел внутри topic. Позволяет параллельно обрабатывать данные.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🔢</div>
+          <div class="concept-name">Offset</div>
+          <div class="concept-desc">Порядковый номер сообщения внутри partition (0, 1, 2...). Как ID строки.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">👥</div>
+          <div class="concept-name">Consumer Group</div>
+          <div class="concept-desc">Группа consumer-ов, совместно читающих один topic, распределяя нагрузку.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📋</div>
+          <div class="concept-name">Message</div>
+          <div class="concept-desc">Единица данных в Kafka. Содержит key, value, timestamp, headers.</div>
+        </div>
+      </div>
+
+      <h2>Topic — главная абстракция</h2>
+      <p>Все данные в Kafka организованы в <strong>topics</strong>. Это как папки: в одну папку складывают логи, в другую — заказы, в третью — клики пользователей.</p>
+
+      <div class="card info">
+        <div class="card-title">📌 Примеры названий topic-ов</div>
+        <p style="margin:0 0 6px;font-size:13px;">
+          <span class="tag">user-registrations</span>&nbsp;
+          <span class="tag">order-events</span>&nbsp;
+          <span class="tag">payment-completed</span>&nbsp;
+          <span class="tag">page-views</span>&nbsp;
+          <span class="tag">sensor-data</span>
+        </p>
+      </div>
+
+      <h2>Сообщение (Message)</h2>
+      <p>Каждое сообщение в Kafka — это просто набор байт. Обычно используют форматы JSON, Avro или Protobuf.</p>
+
+      <pre data-lang="json"><code>{
+  <span class="str">"key"</span>: <span class="str">"user-123"</span>,       <span class="cm">// ключ для распределения по партициям</span>
+  <span class="str">"value"</span>: {            <span class="cm">// полезная нагрузка</span>
+    <span class="str">"event"</span>: <span class="str">"order_created"</span>,
+    <span class="str">"orderId"</span>: <span class="str">"ord-456"</span>,
+    <span class="str">"amount"</span>: <span class="num">1500.00</span>
+  },
+  <span class="str">"timestamp"</span>: <span class="num">1703001600000</span>,
+  <span class="str">"headers"</span>: {          <span class="cm">// метаданные</span>
+    <span class="str">"source"</span>: <span class="str">"order-service"</span>
+  }
+}</code></pre>
+
+      <h2>Partition и Offset — как хранятся данные</h2>
+      <p>Каждый topic разбивается на несколько <strong>partition</strong> (разделов). Внутри каждого partition сообщения пронумерованы — это и есть <strong>offset</strong>.</p>
+
+      <div class="partition-vis">
+        <div class="partition">
+          <div class="partition-title">Partition 0</div>
+          <div class="message-bubble offset-0">offset: 0 | "Заказ 1"</div>
+          <div class="message-bubble offset-1">offset: 1 | "Заказ 4"</div>
+          <div class="message-bubble offset-2">offset: 2 | "Заказ 7"</div>
+        </div>
+        <div class="partition">
+          <div class="partition-title">Partition 1</div>
+          <div class="message-bubble offset-0">offset: 0 | "Заказ 2"</div>
+          <div class="message-bubble offset-1">offset: 1 | "Заказ 5"</div>
+          <div class="message-bubble offset-2">offset: 2 | "Заказ 8"</div>
+        </div>
+        <div class="partition">
+          <div class="partition-title">Partition 2</div>
+          <div class="message-bubble offset-0">offset: 0 | "Заказ 3"</div>
+          <div class="message-bubble offset-1">offset: 1 | "Заказ 6"</div>
+        </div>
+      </div>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ Порядок сообщений</div>
+        <p style="margin:0;font-size:13.5px">Kafka <strong>гарантирует порядок</strong> сообщений только внутри одной partition. Между разными partition порядок не гарантирован. Поэтому если важен порядок — используй один ключ (сообщения с одинаковым ключом попадают в одну partition).</p>
+      </div>
+
+      <h2>Broker — сервер Kafka</h2>
+      <p>Broker — это один узел (сервер) в кластере Kafka. Он принимает сообщения от Producer-ов, хранит их и отдаёт Consumer-ам. В продакшне обычно 3+ broker-а для отказоустойчивости.</p>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Ты хочешь, чтобы все события одного пользователя обрабатывались строго по порядку. Что нужно сделать?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q2')">Создать больше topic-ов</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q2')">Увеличить количество broker-ов</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q2')">Использовать user_id как ключ сообщения — тогда все его события попадут в одну partition</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q2')">Уменьшить количество partition до 1 для всего topic</div>
+        </div>
+        <div class="quiz-result" id="q2-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('1')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('2', '3')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 3 -->
+  <div class="lesson" id="lesson-3">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 03 · Архитектура</div>
+      <div class="lesson-title">Как устроена Kafka изнутри</div>
+      <div class="lesson-desc">Кластер, репликация, ZooKeeper vs KRaft — разбираем архитектуру Kafka и понимаем почему она такая надёжная.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Кластер Kafka</h2>
+      <p>В продакшне Kafka работает как <strong>кластер</strong> — несколько broker-ов объединены вместе. Это даёт отказоустойчивость и масштабируемость.</p>
+
+      <div class="diagram">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Кластер из 3 broker-ов</p>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div class="diagram-box highlight" style="min-width:140px;">
+            <div class="box-label">Broker 1 (Leader)</div>
+            <div class="box-name">⭐ Partition 0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;">Partition 1 (replica)<br>Partition 2 (replica)</div>
+          </div>
+          <div class="diagram-box highlight2" style="min-width:140px;">
+            <div class="box-label">Broker 2</div>
+            <div class="box-name">⭐ Partition 1</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;">Partition 0 (replica)<br>Partition 2 (replica)</div>
+          </div>
+          <div class="diagram-box highlight3" style="min-width:140px;">
+            <div class="box-label">Broker 3</div>
+            <div class="box-name">⭐ Partition 2</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:6px;">Partition 0 (replica)<br>Partition 1 (replica)</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Репликация данных</h2>
+      <p>Каждая partition хранится на нескольких broker-ах. Один из них становится <strong>Leader</strong> — он принимает все записи и чтения. Остальные — <strong>Followers</strong>, они копируют данные с Leader-а.</p>
+
+      <p>Если Leader упадёт — один из Follower-ов автоматически станет новым Leader-ом. Данные не потеряются!</p>
+
+      <div class="card success">
+        <div class="card-title">✅ Replication Factor</div>
+        <p style="margin:0;font-size:13.5px"><strong>Replication Factor</strong> — сколько копий хранится. Обычно ставят 3:<br><code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:3px;">replication.factor=3</code><br>Это значит данные выживут, даже если 2 из 3 серверов упадут.</p>
+      </div>
+
+      <h2>ZooKeeper vs KRaft</h2>
+      <p>Раньше Kafka использовала <strong>Apache ZooKeeper</strong> для хранения метаданных кластера (кто Leader, сколько broker-ов и т.д.). Это создавало дополнительную сложность.</p>
+
+      <table>
+        <tr><th></th><th>ZooKeeper (старый способ)</th><th>KRaft (новый, с Kafka 3.0)</th></tr>
+        <tr><td><strong>Сложность</strong></td><td>Надо поднять отдельный ZooKeeper кластер</td><td>Всё встроено в Kafka</td></tr>
+        <tr><td><strong>Масштаб</strong></td><td>До ~200 000 partition</td><td>Миллионы partition</td></tr>
+        <tr><td><strong>Скорость старта</strong></td><td>Медленнее</td><td>Быстрее</td></tr>
+        <tr><td><strong>Рекомендация</strong></td><td>Устаревший, скоро удалят</td><td>✅ Используй в новых проектах</td></tr>
+      </table>
+
+      <h2>Жизненный цикл сообщения</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Producer отправляет сообщение</div>
+            <div class="step-desc">Producer выбирает topic и (опционально) ключ. Kafka определяет в какую partition попадёт сообщение на основе ключа.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Broker-Leader записывает сообщение</div>
+            <div class="step-desc">Leader partition записывает сообщение в лог (append-only файл на диске). Присваивает offset.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Репликация на Followers</div>
+            <div class="step-desc">Follower broker-ы копируют сообщение. После подтверждения от нужного количества реплик — сообщение считается "закоммиченным".</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-content">
+            <div class="step-title">Consumer читает сообщение</div>
+            <div class="step-desc">Consumer подписывается на topic, Kafka отдаёт сообщения начиная с нужного offset. Consumer сохраняет (commit) свой offset — чтобы знать, что уже прочитал.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Один из трёх broker-ов в кластере упал. Что произойдёт с данными?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q3')">Данные потеряются — надо было делать бэкап</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q3')">Данные сохранятся — они реплицированы на других broker-ах, один из Followers станет Leader</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q3')">Kafka полностью остановится до восстановления сервера</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q3')">Producer-ы перестанут работать, но Consumer-ы продолжат</div>
+        </div>
+        <div class="quiz-result" id="q3-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('2')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('3', '4')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 4 -->
+  <div class="lesson" id="lesson-4">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 04 · Практика</div>
+      <div class="lesson-title">Установка и первые шаги</div>
+      <div class="lesson-desc">Запускаем Kafka локально через Docker. Создаём topic и отправляем первые сообщения через командную строку.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Вариант 1: Docker (самый простой)</h2>
+      <p>Самый быстрый способ — один контейнер с KRaft режимом (без ZooKeeper):</p>
+
+      <pre data-lang="bash"><code><span class="cm"># Скачать и запустить Kafka в KRaft режиме</span>
+docker run -d \
+  --name kafka \
+  -p 9092:9092 \
+  -e KAFKA_NODE_ID=<span class="num">1</span> \
+  -e KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=<span class="str">'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT'</span> \
+  -e KAFKA_ADVERTISED_LISTENERS=<span class="str">'PLAINTEXT://localhost:9092'</span> \
+  -e KAFKA_PROCESS_ROLES=<span class="str">'broker,controller'</span> \
+  -e KAFKA_CONTROLLER_QUORUM_VOTERS=<span class="str">'1@localhost:9093'</span> \
+  apache/kafka:latest</code></pre>
+
+      <h2>Вариант 2: Docker Compose (рекомендуется)</h2>
+      <p>Более удобный способ — создай файл <span class="tag">docker-compose.yml</span>:</p>
+
+      <pre data-lang="yaml"><code><span class="kw">version</span>: <span class="str">'3'</span>
+<span class="kw">services</span>:
+  <span class="kw">kafka</span>:
+    <span class="kw">image</span>: apache/kafka:latest
+    <span class="kw">ports</span>:
+      - <span class="str">"9092:9092"</span>
+    <span class="kw">environment</span>:
+      KAFKA_NODE_ID: <span class="num">1</span>
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://<span class="num">0.0.0.0</span>:<span class="num">9092</span>,CONTROLLER://<span class="num">0.0.0.0</span>:<span class="num">9093</span>
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:<span class="num">9092</span>
+      KAFKA_CONTROLLER_QUORUM_VOTERS: <span class="str">"1@localhost:9093"</span>
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: <span class="num">1</span>
+
+  <span class="kw">kafka-ui</span>:           <span class="cm"># Удобный веб-интерфейс</span>
+    <span class="kw">image</span>: provectuslabs/kafka-ui:latest
+    <span class="kw">ports</span>:
+      - <span class="str">"8080:8080"</span>
+    <span class="kw">environment</span>:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:<span class="num">9092</span>
+    <span class="kw">depends_on</span>:
+      - kafka</code></pre>
+
+      <pre data-lang="bash"><code><span class="cm"># Запустить</span>
+docker-compose up -d
+
+<span class="cm"># Проверить что работает</span>
+docker ps</code></pre>
+
+      <div class="card success">
+        <div class="card-title">🎨 Kafka UI</div>
+        <p style="margin:0;font-size:13.5px">После запуска открой <strong>http://localhost:8080</strong> — там будет визуальный интерфейс для управления Kafka. Очень удобно для изучения!</p>
+      </div>
+
+      <h2>Основные команды CLI</h2>
+      <p>Зайди внутрь контейнера:</p>
+      <pre data-lang="bash"><code>docker exec -it kafka /bin/bash
+<span class="cm"># или</span>
+docker exec -it kafka /opt/kafka/bin/kafka-topics.sh --help</code></pre>
+
+      <h3>Работа с topic-ами</h3>
+      <pre data-lang="bash"><code><span class="cm"># Создать topic с 3 partition</span>
+kafka-topics.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --create \
+  --topic my-first-topic \
+  --partitions <span class="num">3</span> \
+  --replication-factor <span class="num">1</span>
+
+<span class="cm"># Посмотреть все topic-ы</span>
+kafka-topics.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --list
+
+<span class="cm"># Детальная информация о topic</span>
+kafka-topics.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --describe \
+  --topic my-first-topic</code></pre>
+
+      <h3>Отправка и чтение сообщений</h3>
+      <pre data-lang="bash"><code><span class="cm"># Отправить сообщения (каждая строка = 1 сообщение)</span>
+kafka-console-producer.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --topic my-first-topic
+
+<span class="cm"># Читать сообщения (с самого начала)</span>
+kafka-console-consumer.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --topic my-first-topic \
+  --from-beginning
+
+<span class="cm"># Читать только новые сообщения</span>
+kafka-console-consumer.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --topic my-first-topic</code></pre>
+
+      <div class="card info">
+        <div class="card-title">💡 Попробуй сам</div>
+        <p style="margin:0;font-size:13.5px">Открой два терминала. В первом запусти producer, во втором — consumer. Пиши сообщения в первом терминале и наблюдай как они появляются во втором — в реальном времени!</p>
+      </div>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Ты хочешь прочитать все сообщения в topic-е, включая те, что были отправлены до запуска consumer-а. Какой флаг нужно добавить?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q4')">--read-all</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q4')">--from-beginning</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q4')">--offset 0</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q4')">--history</div>
+        </div>
+        <div class="quiz-result" id="q4-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('3')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('4', '5')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 5 -->
+  <div class="lesson" id="lesson-5">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 05 · Практика</div>
+      <div class="lesson-title">Producer — отправка сообщений</div>
+      <div class="lesson-desc">Пишем Producer на Python и Java. Разбираем конфигурацию, acks, compression и батчинг.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Producer на Python</h2>
+      <p>Установим библиотеку:</p>
+      <pre data-lang="bash"><code>pip install kafka-python-ng</code></pre>
+
+      <p>Простой producer:</p>
+      <pre data-lang="python"><code><span class="kw">from</span> kafka <span class="kw">import</span> KafkaProducer
+<span class="kw">import</span> json
+
+<span class="cm"># Создаём producer</span>
+producer = <span class="cls">KafkaProducer</span>(
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    <span class="cm"># Сериализация: Python dict → JSON → bytes</span>
+    value_serializer=<span class="kw">lambda</span> v: json.dumps(v).encode(<span class="str">'utf-8'</span>),
+    key_serializer=<span class="kw">lambda</span> k: k.encode(<span class="str">'utf-8'</span>) <span class="kw">if</span> k <span class="kw">else</span> <span class="kw">None</span>
+)
+
+<span class="cm"># Отправляем сообщение</span>
+producer.<span class="fn">send</span>(
+    topic=<span class="str">'orders'</span>,
+    key=<span class="str">'user-123'</span>,       <span class="cm"># ключ (необязательно)</span>
+    value={
+        <span class="str">'order_id'</span>: <span class="str">'ord-789'</span>,
+        <span class="str">'user_id'</span>: <span class="str">'user-123'</span>,
+        <span class="str">'amount'</span>: <span class="num">2500.0</span>,
+        <span class="str">'status'</span>: <span class="str">'created'</span>
+    }
+)
+
+<span class="cm"># Ждём подтверждения отправки всех сообщений</span>
+producer.<span class="fn">flush</span>()
+producer.<span class="fn">close</span>()
+<span class="fn">print</span>(<span class="str">"Сообщение отправлено!"</span>)</code></pre>
+
+      <h2>Callback — обработка результата</h2>
+      <pre data-lang="python"><code><span class="kw">def</span> <span class="fn">on_send_success</span>(record_metadata):
+    <span class="fn">print</span>(<span class="str">f"✅ Отправлено в topic: {record_metadata.topic}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Partition: {record_metadata.partition}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Offset: {record_metadata.offset}"</span>)
+
+<span class="kw">def</span> <span class="fn">on_send_error</span>(exc):
+    <span class="fn">print</span>(<span class="str">f"❌ Ошибка: {exc}"</span>)
+
+producer.<span class="fn">send</span>(<span class="str">'orders'</span>, value={<span class="str">'test'</span>: <span class="num">1</span>}) \
+        .<span class="fn">add_callback</span>(on_send_success) \
+        .<span class="fn">add_errback</span>(on_send_error)</code></pre>
+
+      <h2>Важные настройки Producer</h2>
+      <table>
+        <tr><th>Параметр</th><th>Значение</th><th>Что делает</th></tr>
+        <tr><td><code>acks</code></td><td>0 / 1 / all</td><td>Сколько broker-ов должны подтвердить запись</td></tr>
+        <tr><td><code>retries</code></td><td>0..MAX_INT</td><td>Сколько раз повторять при ошибке</td></tr>
+        <tr><td><code>batch_size</code></td><td>16384 (байт)</td><td>Размер батча для отправки</td></tr>
+        <tr><td><code>linger_ms</code></td><td>0..5</td><td>Ждать N мс перед отправкой батча</td></tr>
+        <tr><td><code>compression_type</code></td><td>none/gzip/snappy/lz4</td><td>Сжатие сообщений</td></tr>
+      </table>
+
+      <div class="card info">
+        <div class="card-title">💡 acks — самый важный параметр</div>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:var(--text2);">
+          <li><strong>acks=0</strong> — "Огонь и забудь". Максимальная скорость, нет гарантий. Можно потерять данные.</li>
+          <li><strong>acks=1</strong> — Ждём подтверждения только от Leader. Может потерять данные при падении Leader.</li>
+          <li><strong>acks=all</strong> — Ждём от всех реплик. Максимальная надёжность, чуть медленнее.</li>
+        </ul>
+      </div>
+
+      <h2>Producer с оптимальными настройками</h2>
+      <pre data-lang="python"><code>producer = <span class="cls">KafkaProducer</span>(
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    value_serializer=<span class="kw">lambda</span> v: json.dumps(v).encode(<span class="str">'utf-8'</span>),
+    
+    <span class="cm"># Надёжность</span>
+    acks=<span class="str">'all'</span>,          <span class="cm"># ждём подтверждения от всех реплик</span>
+    retries=<span class="num">3</span>,           <span class="cm"># 3 попытки при ошибке</span>
+    
+    <span class="cm"># Производительность</span>
+    batch_size=<span class="num">16384</span>,    <span class="cm"># батч до 16KB</span>
+    linger_ms=<span class="num">5</span>,         <span class="cm"># ждём 5мс для накопления батча</span>
+    compression_type=<span class="str">'snappy'</span>  <span class="cm"># сжимаем данные</span>
+)</code></pre>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Ты разрабатываешь систему мониторинга, где важна скорость и потеря нескольких метрик не критична. Какой acks выбрать?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q5')">acks=0 или acks=1 — скорость важнее надёжности</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q5')">acks=all — всегда нужна максимальная надёжность</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q5')">Acks не влияет на скорость</div>
+        </div>
+        <div class="quiz-result" id="q5-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('4')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('5', '6')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 6 -->
+  <div class="lesson" id="lesson-6">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 06 · Практика</div>
+      <div class="lesson-title">Consumer — чтение сообщений</div>
+      <div class="lesson-desc">Пишем Consumer на Python. Разбираем commit offset, auto.offset.reset и graceful shutdown.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Простой Consumer на Python</h2>
+      <pre data-lang="python"><code><span class="kw">from</span> kafka <span class="kw">import</span> KafkaConsumer
+<span class="kw">import</span> json
+
+consumer = <span class="cls">KafkaConsumer</span>(
+    <span class="str">'orders'</span>,               <span class="cm"># подписываемся на topic</span>
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    group_id=<span class="str">'order-processor'</span>,  <span class="cm"># имя группы</span>
+    
+    <span class="cm"># Десериализация: bytes → JSON → Python dict</span>
+    value_deserializer=<span class="kw">lambda</span> m: json.loads(m.decode(<span class="str">'utf-8'</span>)),
+    key_deserializer=<span class="kw">lambda</span> k: k.decode(<span class="str">'utf-8'</span>) <span class="kw">if</span> k <span class="kw">else</span> <span class="kw">None</span>,
+    
+    <span class="cm"># С какого места читать если group_id не знает этот topic:</span>
+    <span class="cm"># 'earliest' = с начала, 'latest' = только новые</span>
+    auto_offset_reset=<span class="str">'earliest'</span>,
+    
+    enable_auto_commit=<span class="kw">True</span>   <span class="cm"># автоматически сохранять offset</span>
+)
+
+<span class="fn">print</span>(<span class="str">"Ожидаем сообщения..."</span>)
+<span class="kw">for</span> message <span class="kw">in</span> consumer:
+    <span class="fn">print</span>(<span class="str">f"\n📨 Новое сообщение:"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Topic:     {message.topic}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Partition: {message.partition}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Offset:    {message.offset}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Key:       {message.key}"</span>)
+    <span class="fn">print</span>(<span class="str">f"   Value:     {message.value}"</span>)</code></pre>
+
+      <h2>Ручной commit offset — для надёжности</h2>
+      <p>По умолчанию Consumer автоматически сохраняет offset. Но что если сообщение прочиталось, но обработка упала? Данные будут помечены как обработанные, хотя это не так.</p>
+
+      <p>Решение — <strong>ручной commit</strong> после успешной обработки:</p>
+
+      <pre data-lang="python"><code>consumer = <span class="cls">KafkaConsumer</span>(
+    <span class="str">'orders'</span>,
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    group_id=<span class="str">'order-processor-reliable'</span>,
+    value_deserializer=<span class="kw">lambda</span> m: json.loads(m.decode(<span class="str">'utf-8'</span>)),
+    enable_auto_commit=<span class="kw">False</span>  <span class="cm"># ❌ отключаем авто-commit</span>
+)
+
+<span class="kw">for</span> message <span class="kw">in</span> consumer:
+    <span class="kw">try</span>:
+        <span class="cm"># Обрабатываем сообщение</span>
+        order = message.value
+        process_order(order)
+        
+        <span class="cm"># ✅ Только после успешной обработки — commit</span>
+        consumer.<span class="fn">commit</span>()
+        
+    <span class="kw">except</span> <span class="cls">Exception</span> <span class="kw">as</span> e:
+        <span class="fn">print</span>(<span class="str">f"❌ Ошибка обработки: {e}"</span>)
+        <span class="cm"># НЕ делаем commit — сообщение будет перечитано</span></code></pre>
+
+      <h2>Graceful Shutdown</h2>
+      <p>Правильный способ остановить Consumer — обработать сигнал SIGINT (Ctrl+C):</p>
+
+      <pre data-lang="python"><code><span class="kw">import</span> signal
+<span class="kw">import</span> sys
+
+running = <span class="kw">True</span>
+
+<span class="kw">def</span> <span class="fn">signal_handler</span>(sig, frame):
+    <span class="kw">global</span> running
+    running = <span class="kw">False</span>
+    <span class="fn">print</span>(<span class="str">"\n🛑 Останавливаем consumer..."</span>)
+
+signal.<span class="fn">signal</span>(signal.SIGINT, signal_handler)
+
+<span class="kw">while</span> running:
+    messages = consumer.<span class="fn">poll</span>(timeout_ms=<span class="num">1000</span>)
+    <span class="kw">for</span> tp, msgs <span class="kw">in</span> messages.items():
+        <span class="kw">for</span> msg <span class="kw">in</span> msgs:
+            <span class="fn">process</span>(msg)
+            consumer.<span class="fn">commit</span>()
+
+consumer.<span class="fn">close</span>()
+<span class="fn">print</span>(<span class="str">"✅ Consumer закрыт корректно"</span>)</code></pre>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ auto_offset_reset</div>
+        <p style="margin:0;font-size:13.5px;margin-bottom:8px;"><strong>earliest</strong> — читать с самого начала topic (если это новая группа)</p>
+        <p style="margin:0;font-size:13.5px;"><strong>latest</strong> — читать только новые сообщения (пришедшие после запуска consumer-а)</p>
+      </div>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Consumer прочитал сообщение, начал его обрабатывать, но процесс упал до коммита offset. Что произойдёт при перезапуске?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q6')">Сообщение потеряется навсегда</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q6')">Сообщение будет перечитано заново — offset не был сохранён</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q6')">Kafka автоматически откатит изменения</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q6')">Следующий consumer в группе обработает его вместо упавшего</div>
+        </div>
+        <div class="quiz-result" id="q6-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('5')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('6', '7')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 7 -->
+  <div class="lesson" id="lesson-7">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 07 · Углублённо</div>
+      <div class="lesson-title">Partitions & Offsets</div>
+      <div class="lesson-desc">Понимаем как работает параллельность в Kafka, как выбирается partition и что такое retention policy.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Как Producer выбирает partition?</h2>
+      <p>Когда Producer отправляет сообщение — Kafka решает, в какую partition его положить:</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-content">
+            <div class="step-title">Указан ключ (Key)</div>
+            <div class="step-desc"><code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:2px 6px;border-radius:3px;">partition = hash(key) % num_partitions</code><br>Одинаковый ключ → всегда одна и та же partition. Гарантирует порядок для одного пользователя/сущности.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-content">
+            <div class="step-title">Ключ не указан</div>
+            <div class="step-desc">Sticky Partitioner: накапливает батч в одну partition, потом переключается на следующую. Эффективно для больших объёмов.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-content">
+            <div class="step-title">Кастомный Partitioner</div>
+            <div class="step-desc">Можно написать свою логику: например, VIP-пользователей в отдельную partition для приоритетной обработки.</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Retention Policy — как долго хранятся данные</h2>
+      <p>В отличие от традиционных очередей, Kafka хранит сообщения долго. Можно настроить:</p>
+
+      <table>
+        <tr><th>Параметр</th><th>Пример</th><th>Описание</th></tr>
+        <tr><td><code>retention.ms</code></td><td>604800000 (7 дней)</td><td>Хранить сообщения N миллисекунд</td></tr>
+        <tr><td><code>retention.bytes</code></td><td>1073741824 (1 GB)</td><td>Максимальный размер partition</td></tr>
+        <tr><td><code>cleanup.policy</code></td><td>delete / compact</td><td>Что делать со старыми данными</td></tr>
+      </table>
+
+      <div class="card info">
+        <div class="card-title">💡 Log Compaction</div>
+        <p style="margin:0;font-size:13.5px">При <strong>cleanup.policy=compact</strong> Kafka хранит только последнее сообщение для каждого ключа. Идеально для хранения текущего состояния (например, последний статус заказа). Старые значения удаляются, последнее — всегда доступно.</p>
+      </div>
+
+      <h2>Увеличение количества partition</h2>
+      <pre data-lang="bash"><code><span class="cm"># Посмотреть текущее количество</span>
+kafka-topics.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --describe \
+  --topic orders
+
+<span class="cm"># Увеличить до 6 partitions</span>
+kafka-topics.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --alter \
+  --topic orders \
+  --partitions <span class="num">6</span></code></pre>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ Нельзя уменьшить количество partition</div>
+        <p style="margin:0;font-size:13.5px">Kafka позволяет только <strong>увеличивать</strong> количество partition. Уменьшить нельзя — это нарушит порядок сообщений. Если нужно уменьшить — придётся пересоздать topic и перенести данные.</p>
+      </div>
+
+      <h2>Сколько partition нужно?</h2>
+      <p>Общее правило:</p>
+      <ul>
+        <li>Больше partition → выше параллельность, но больше нагрузка на broker</li>
+        <li>Хорошее число: от 3 до 12 для большинства случаев</li>
+        <li>Правило: <strong>число partition ≥ число consumer-ов в группе</strong> (иначе часть consumer-ов будет простаивать)</li>
+      </ul>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">У тебя topic с 6 partition и нужно хранить только последнее состояние каждого объекта (например, текущий статус устройства). Что настроить?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q7')">retention.ms=-1 (хранить вечно)</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q7')">cleanup.policy=compact — хранит только последнее сообщение по каждому ключу</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q7')">retention.bytes=0 (не хранить)</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q7')">Уменьшить количество partition до 1</div>
+        </div>
+        <div class="quiz-result" id="q7-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('6')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('7', '8')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 8 -->
+  <div class="lesson" id="lesson-8">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 08 · Углублённо</div>
+      <div class="lesson-title">Consumer Groups</div>
+      <div class="lesson-desc">Как несколько Consumer-ов делят работу между собой, что такое Rebalance и как мониторить отставание (lag).</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Что такое Consumer Group?</h2>
+      <p><strong>Consumer Group</strong> — это несколько Consumer-ов, которые совместно читают один topic. Kafka автоматически распределяет partition между ними.</p>
+
+      <div class="diagram">
+        <p style="font-size:12px;color:var(--text3);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Topic с 6 partition — 3 consumer-а в группе</p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="diagram-box" style="min-width:100px;font-size:11px;">
+              <div class="box-label">Partition</div>
+              <div>P0, P1</div>
+            </div>
+          </div>
+          <div class="diagram-arrow">→</div>
+          <div class="diagram-box highlight3"><div class="box-label">Consumer 1</div><div class="box-name" style="font-size:11px">order-svc-1</div></div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="diagram-box" style="min-width:100px;font-size:11px;">
+              <div class="box-label">Partition</div>
+              <div>P2, P3</div>
+            </div>
+          </div>
+          <div class="diagram-arrow">→</div>
+          <div class="diagram-box highlight3"><div class="box-label">Consumer 2</div><div class="box-name" style="font-size:11px">order-svc-2</div></div>
+        </div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:8px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="diagram-box" style="min-width:100px;font-size:11px;">
+              <div class="box-label">Partition</div>
+              <div>P4, P5</div>
+            </div>
+          </div>
+          <div class="diagram-arrow">→</div>
+          <div class="diagram-box highlight3"><div class="box-label">Consumer 3</div><div class="box-name" style="font-size:11px">order-svc-3</div></div>
+        </div>
+      </div>
+
+      <div class="card info">
+        <div class="card-title">💡 Правила распределения</div>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:var(--text2);">
+          <li>Каждая partition читается только одним Consumer-ом в группе</li>
+          <li>Один Consumer может читать несколько partition</li>
+          <li>Если Consumer-ов больше чем partition — лишние будут простаивать</li>
+          <li>Разные группы читают topic независимо и не мешают друг другу</li>
+        </ul>
+      </div>
+
+      <h2>Несколько групп = независимые читатели</h2>
+      <p>Одни и те же данные можно читать разными командами независимо:</p>
+
+      <div class="diagram">
+        <div class="diagram-flow" style="gap:8px;">
+          <div class="diagram-box highlight2" style="min-width:120px;">
+            <div class="box-label">Topic</div>
+            <div class="box-name">orders</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-left:20px;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:var(--text3)">→</span>
+              <div class="diagram-box highlight3"><div class="box-name" style="font-size:10px">Group: email-service</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:var(--text3)">→</span>
+              <div class="diagram-box highlight"><div class="box-name" style="font-size:10px">Group: analytics</div></div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span style="color:var(--text3)">→</span>
+              <div class="diagram-box"><div class="box-name" style="font-size:10px">Group: warehouse</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Rebalance — перераспределение partition</h2>
+      <p>Когда Consumer <strong>входит</strong> или <strong>выходит</strong> из группы (упал, добавился новый) — происходит <strong>Rebalance</strong>. Kafka перераспределяет partition между оставшимися Consumer-ами.</p>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ Rebalance — это больно</div>
+        <p style="margin:0;font-size:13.5px">Во время Rebalance все Consumer-ы в группе <strong>останавливаются</strong>. Это называется "stop the world". Чтобы минимизировать Rebalance: настраивай <code>session.timeout.ms</code> и <code>max.poll.interval.ms</code> разумно, используй Static Membership (Kafka 2.4+).</p>
+      </div>
+
+      <h2>Consumer Lag — отставание</h2>
+      <p><strong>Consumer Lag</strong> — это разница между последним offset-ом в partition и текущим offset-ом Consumer-а. Показывает, насколько Consumer отстаёт от Producer-а.</p>
+
+      <pre data-lang="bash"><code><span class="cm"># Посмотреть lag для всех групп</span>
+kafka-consumer-groups.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --describe \
+  --all-groups
+
+<span class="cm"># Для конкретной группы</span>
+kafka-consumer-groups.sh \
+  --bootstrap-server localhost:<span class="num">9092</span> \
+  --describe \
+  --group order-processor
+
+<span class="cm"># Вывод будет примерно такой:</span>
+<span class="cm"># GROUP           TOPIC   PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG</span>
+<span class="cm"># order-processor orders  0          1050            1055            5</span>
+<span class="cm"># order-processor orders  1          2000            2100            100 ← проблема!</span></code></pre>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">У topic 4 partition. Ты запустил 6 consumer-ов в одной группе. Сколько будут работать?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q8')">Все 6 — Kafka раздаст каждому по partition</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q8')">Только 4 — по одному на partition, 2 будут простаивать</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q8')">Kafka вернёт ошибку — нельзя больше consumer-ов чем partition</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q8')">Только 1 — Kafka выбирает одного лидера</div>
+        </div>
+        <div class="quiz-result" id="q8-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('7')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('8', '9')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 9 -->
+  <div class="lesson" id="lesson-9">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 09 · Углублённо</div>
+      <div class="lesson-title">Надёжность данных</div>
+      <div class="lesson-desc">Репликация, семантика доставки (at-least-once, exactly-once), идемпотентность и транзакции.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Три семантики доставки</h2>
+      <p>В распределённых системах существует три подхода к гарантии доставки сообщений:</p>
+
+      <table>
+        <tr><th>Семантика</th><th>Описание</th><th>Когда использовать</th></tr>
+        <tr>
+          <td><strong>At-most-once</strong></td>
+          <td>Сообщение доставится 0 или 1 раз. Может потеряться.</td>
+          <td>Метрики, логи, где потеря не критична</td>
+        </tr>
+        <tr>
+          <td><strong>At-least-once</strong></td>
+          <td>Сообщение доставится минимум 1 раз. Может дублироваться.</td>
+          <td>Большинство систем. По умолчанию в Kafka.</td>
+        </tr>
+        <tr>
+          <td><strong>Exactly-once</strong></td>
+          <td>Сообщение доставится ровно 1 раз. Без потерь и дублей.</td>
+          <td>Финансовые транзакции, критичные данные</td>
+        </tr>
+      </table>
+
+      <h2>Идемпотентный Producer</h2>
+      <p>Чтобы избежать дублей при повторных отправках (например, при retry после ошибки сети) — включи <strong>идемпотентность</strong>:</p>
+
+      <pre data-lang="python"><code>producer = <span class="cls">KafkaProducer</span>(
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    
+    <span class="cm"># Включаем идемпотентность</span>
+    enable_idempotence=<span class="kw">True</span>,  <span class="cm"># автоматически установит:</span>
+                                  <span class="cm"># acks='all'</span>
+                                  <span class="cm"># retries=MAX</span>
+                                  <span class="cm"># max_in_flight_requests_per_connection=5</span>
+)</code></pre>
+
+      <div class="card info">
+        <div class="card-title">💡 Как работает идемпотентность</div>
+        <p style="margin:0;font-size:13.5px">Kafka присваивает каждому Producer уникальный ID (PID) и нумерует сообщения (Sequence Number). Если broker получает дубль — он его отбрасывает. Producer получает "успех", данные не дублируются.</p>
+      </div>
+
+      <h2>Exactly-Once с транзакциями</h2>
+      <p>Для полного exactly-once — используй транзакции. Это позволяет атомарно читать, обрабатывать и записывать данные:</p>
+
+      <pre data-lang="python"><code>producer = <span class="cls">KafkaProducer</span>(
+    bootstrap_servers=[<span class="str">'localhost:9092'</span>],
+    transactional_id=<span class="str">'my-transactional-producer'</span>
+)
+
+producer.<span class="fn">init_transactions</span>()
+
+<span class="kw">try</span>:
+    producer.<span class="fn">begin_transaction</span>()
+    
+    <span class="cm"># Атомарная операция: всё или ничего</span>
+    producer.<span class="fn">send</span>(<span class="str">'output-topic'</span>, value=processed_data)
+    producer.<span class="fn">send_offsets_to_transaction</span>(
+        offsets, consumer.consumer_group_id
+    )
+    
+    producer.<span class="fn">commit_transaction</span>()
+    
+<span class="kw">except</span> <span class="cls">Exception</span>:
+    producer.<span class="fn">abort_transaction</span>()  <span class="cm"># откат</span></code></pre>
+
+      <h2>ISR — In-Sync Replicas</h2>
+      <p><strong>ISR</strong> — список реплик, которые синхронизированы с Leader-ом. Именно ISR реплики могут стать новым Leader-ом при сбое.</p>
+
+      <div class="card warning">
+        <div class="card-title">⚠️ min.insync.replicas</div>
+        <p style="margin:0;font-size:13.5px">Настройка <strong>min.insync.replicas=2</strong> гарантирует, что запись считается успешной только если минимум 2 реплики её подтвердили. В связке с <code>acks=all</code> это даёт максимальную надёжность.</p>
+      </div>
+
+      <div class="quiz">
+        <div class="quiz-header"><span class="quiz-badge">⚡ Проверка знаний</span></div>
+        <div class="quiz-q">Ты обрабатываешь финансовые транзакции. Одна и та же транзакция не должна быть обработана дважды. Что использовать?</div>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q9')">At-most-once семантику — лучше потерять, чем задвоить</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q9')">At-least-once с проверкой дублей в БД</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, true, 'q9')">Exactly-once через транзакции и идемпотентный Producer</div>
+          <div class="quiz-opt" onclick="checkQuiz(this, false, 'q9')">Kafka не поддерживает финансовые транзакции</div>
+        </div>
+        <div class="quiz-result" id="q9-result"></div>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('8')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('9', '10')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 10 -->
+  <div class="lesson" id="lesson-10">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 10 · Продвинутый</div>
+      <div class="lesson-title">Kafka Streams</div>
+      <div class="lesson-desc">Обработка потоков данных в реальном времени прямо внутри Kafka — без Spark и Flink.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Что такое Kafka Streams?</h2>
+      <p><strong>Kafka Streams</strong> — это Java-библиотека для обработки потоков данных. Читает из topic, трансформирует данные и записывает результат в другой topic.</p>
+
+      <div class="card info">
+        <div class="card-title">💡 Зачем нужен Kafka Streams?</div>
+        <p style="margin:0;font-size:13.5px">Вместо: "Прочитай сообщения → обработай в своём коде → запиши результат" ты описываешь pipeline трансформаций декларативно. Kafka Streams масштабируется, отказоустойчив и не требует отдельного кластера (как Spark).</p>
+      </div>
+
+      <h2>Основные операции</h2>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="concept-icon">🔍</div>
+          <div class="concept-name">filter()</div>
+          <div class="concept-desc">Оставить только сообщения, удовлетворяющие условию</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🔄</div>
+          <div class="concept-name">map()</div>
+          <div class="concept-desc">Трансформировать каждое сообщение</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🔗</div>
+          <div class="concept-name">join()</div>
+          <div class="concept-desc">Объединить два потока данных</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📊</div>
+          <div class="concept-name">aggregate()</div>
+          <div class="concept-desc">Агрегировать данные по ключу</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">⏰</div>
+          <div class="concept-name">windowing()</div>
+          <div class="concept-desc">Группировать по временным окнам (последние 5 минут)</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📋</div>
+          <div class="concept-name">KTable</div>
+          <div class="concept-desc">Поток как таблица текущего состояния (changelog)</div>
+        </div>
+      </div>
+
+      <h2>Пример на Java</h2>
+      <pre data-lang="java"><code><span class="cm">// Считаем количество заказов по статусам в реальном времени</span>
+<span class="cls">StreamsBuilder</span> builder = <span class="kw">new</span> <span class="cls">StreamsBuilder</span>();
+
+<span class="cm">// Читаем поток заказов</span>
+<span class="cls">KStream</span>&lt;<span class="cls">String</span>, <span class="cls">Order</span>&gt; orders = builder
+    .<span class="fn">stream</span>(<span class="str">"orders"</span>);
+
+<span class="cm">// Считаем заказы по статусу</span>
+<span class="cls">KTable</span>&lt;<span class="cls">String</span>, <span class="cls">Long</span>&gt; orderCounts = orders
+    .<span class="fn">filter</span>((key, order) -> order.amount > <span class="num">0</span>)   <span class="cm">// фильтр</span>
+    .<span class="fn">selectKey</span>((key, order) -> order.status)       <span class="cm">// группируем по статусу</span>
+    .<span class="fn">groupByKey</span>()
+    .<span class="fn">count</span>();                                      <span class="cm">// считаем</span>
+
+<span class="cm">// Записываем результат</span>
+orderCounts
+    .<span class="fn">toStream</span>()
+    .<span class="fn">to</span>(<span class="str">"order-counts"</span>);
+
+<span class="cm">// Запускаем</span>
+<span class="cls">KafkaStreams</span> streams = <span class="kw">new</span> <span class="cls">KafkaStreams</span>(builder.<span class="fn">build</span>(), config);
+streams.<span class="fn">start</span>();</code></pre>
+
+      <h2>Windowing — временные окна</h2>
+      <p>Одна из мощных функций — агрегация за временной период:</p>
+
+      <pre data-lang="java"><code><span class="cm">// Считаем сумму заказов за каждые 5 минут</span>
+orders
+    .<span class="fn">groupBy</span>((key, order) -> order.userId)
+    .<span class="fn">windowedBy</span>(<span class="cls">TimeWindows</span>.<span class="fn">ofSizeWithNoGrace</span>(<span class="cls">Duration</span>.<span class="fn">ofMinutes</span>(<span class="num">5</span>)))
+    .<span class="fn">aggregate</span>(
+        () -> <span class="num">0.0</span>,                              <span class="cm">// начальное значение</span>
+        (userId, order, total) -> total + order.amount
+    )
+    .<span class="fn">toStream</span>()
+    .<span class="fn">to</span>(<span class="str">"user-revenue-per-5min"</span>);</code></pre>
+
+      <div class="card success">
+        <div class="card-title">✅ Ksql — SQL для Kafka</div>
+        <p style="margin:0;font-size:13.5px">Не хочешь писать Java? Используй <strong>ksqlDB</strong> — можно обрабатывать потоки с помощью SQL:<br><br><code style="font-family:'JetBrains Mono',monospace;font-size:12px;background:rgba(255,255,255,0.05);padding:6px 10px;border-radius:4px;display:block;margin-top:8px;">SELECT status, COUNT(*) FROM orders GROUP BY status EMIT CHANGES;</code></p>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('9')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('10', '11')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 11 -->
+  <div class="lesson" id="lesson-11">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 11 · Продвинутый</div>
+      <div class="lesson-title">Kafka Connect</div>
+      <div class="lesson-desc">Интеграция Kafka с базами данных, S3, Elasticsearch и другими системами без написания кода.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Что такое Kafka Connect?</h2>
+      <p><strong>Kafka Connect</strong> — фреймворк для интеграции Kafka с внешними системами. Позволяет без написания Producer/Consumer кода переносить данные между Kafka и:</p>
+      <ul>
+        <li>Базами данных (PostgreSQL, MySQL, MongoDB)</li>
+        <li>Файловыми хранилищами (S3, GCS, HDFS)</li>
+        <li>Поисковыми движками (Elasticsearch, Solr)</li>
+        <li>Стриминговыми сервисами и CRM системами</li>
+      </ul>
+
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="concept-icon">📥</div>
+          <div class="concept-name">Source Connector</div>
+          <div class="concept-desc">Читает из внешней системы → пишет в Kafka topic</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">📤</div>
+          <div class="concept-name">Sink Connector</div>
+          <div class="concept-desc">Читает из Kafka topic → пишет во внешнюю систему</div>
+        </div>
+      </div>
+
+      <h2>Пример: CDC с PostgreSQL</h2>
+      <p><strong>CDC (Change Data Capture)</strong> — отслеживание изменений в БД. Debezium Connector читает WAL-лог PostgreSQL и пишет каждое изменение в Kafka:</p>
+
+      <pre data-lang="json"><code>{
+  <span class="str">"name"</span>: <span class="str">"postgres-source"</span>,
+  <span class="str">"config"</span>: {
+    <span class="str">"connector.class"</span>: <span class="str">"io.debezium.connector.postgresql.PostgresConnector"</span>,
+    <span class="str">"database.hostname"</span>: <span class="str">"localhost"</span>,
+    <span class="str">"database.port"</span>: <span class="str">"5432"</span>,
+    <span class="str">"database.user"</span>: <span class="str">"kafka_user"</span>,
+    <span class="str">"database.password"</span>: <span class="str">"secret"</span>,
+    <span class="str">"database.dbname"</span>: <span class="str">"shop"</span>,
+    <span class="str">"table.include.list"</span>: <span class="str">"public.orders,public.users"</span>,
+    <span class="str">"topic.prefix"</span>: <span class="str">"db"</span>
+    <span class="cm">// Создаст topics: db.public.orders, db.public.users</span>
+  }
+}</code></pre>
+
+      <h2>Пример: Sink в Elasticsearch</h2>
+      <pre data-lang="json"><code>{
+  <span class="str">"name"</span>: <span class="str">"elasticsearch-sink"</span>,
+  <span class="str">"config"</span>: {
+    <span class="str">"connector.class"</span>: <span class="str">"io.confluent.connect.elasticsearch.ElasticsearchSinkConnector"</span>,
+    <span class="str">"topics"</span>: <span class="str">"orders"</span>,
+    <span class="str">"connection.url"</span>: <span class="str">"http://elasticsearch:9200"</span>,
+    <span class="str">"type.name"</span>: <span class="str">"_doc"</span>,
+    <span class="str">"key.ignore"</span>: <span class="str">"true"</span>
+  }
+}</code></pre>
+
+      <h2>Управление через REST API</h2>
+      <pre data-lang="bash"><code><span class="cm"># Создать connector</span>
+curl -X POST http://localhost:<span class="num">8083</span>/connectors \
+  -H <span class="str">"Content-Type: application/json"</span> \
+  -d @connector-config.json
+
+<span class="cm"># Посмотреть все connectors</span>
+curl http://localhost:<span class="num">8083</span>/connectors
+
+<span class="cm"># Статус connector-а</span>
+curl http://localhost:<span class="num">8083</span>/connectors/postgres-source/status
+
+<span class="cm"># Удалить connector</span>
+curl -X DELETE http://localhost:<span class="num">8083</span>/connectors/postgres-source</code></pre>
+
+      <div class="card success">
+        <div class="card-title">✅ Популярные connectors</div>
+        <p style="margin:0;font-size:13.5px">На <strong>hub.confluent.io</strong> есть 200+ готовых connectors. Большинство — бесплатные и open-source. Debezium для CDC, JDBC для SQL баз, S3 Sink для архивирования — самые популярные.</p>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('10')">← Назад</button>
+      <button class="btn btn-primary" onclick="completeAndNext('11', '12')">Следующий урок →</button>
+    </div>
+  </div>
+
+  <!-- УРОК 12 -->
+  <div class="lesson" id="lesson-12">
+    <div class="lesson-header">
+      <div class="lesson-tag">Урок 12 · Продакшн</div>
+      <div class="lesson-title">Kafka в продакшн</div>
+      <div class="lesson-desc">Мониторинг, типичные ошибки, checklist для продакшн деплоя и что изучать дальше.</div>
+    </div>
+    <div class="lesson-body">
+      <h2>Ключевые метрики для мониторинга</h2>
+      <table>
+        <tr><th>Метрика</th><th>Что значит</th><th>Норма</th></tr>
+        <tr><td>Consumer Lag</td><td>Отставание от Producer-а</td><td>Близко к 0</td></tr>
+        <tr><td>Under-Replicated Partitions</td><td>Partition без достаточного числа реплик</td><td>= 0</td></tr>
+        <tr><td>Request Latency</td><td>Задержка обработки запросов</td><td>&lt; 10ms</td></tr>
+        <tr><td>Bytes In/Out per Sec</td><td>Throughput кластера</td><td>Зависит от нагрузки</td></tr>
+        <tr><td>Active Controller Count</td><td>Кол-во активных контроллеров</td><td>= 1</td></tr>
+      </table>
+
+      <h2>Типичные ошибки новичков</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">❌</div>
+          <div class="step-content">
+            <div class="step-title">Слишком мало partition на старте</div>
+            <div class="step-desc">Потом придётся добавлять и это нарушит порядок сообщений. Планируй на вырост: 6-12 partition на topic — хорошее начало.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">❌</div>
+          <div class="step-content">
+            <div class="step-title">enable_auto_commit=True в критичных системах</div>
+            <div class="step-desc">Если сервис упадёт после commit но до реальной обработки — данные потеряются. Используй ручной commit.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">❌</div>
+          <div class="step-content">
+            <div class="step-title">Один broker в продакшне</div>
+            <div class="step-desc">Это single point of failure. Минимум 3 broker-а для отказоустойчивости.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">❌</div>
+          <div class="step-content">
+            <div class="step-title">Огромные сообщения</div>
+            <div class="step-desc">Kafka оптимизирована под маленькие сообщения (до 1 MB). Большие файлы — сохраняй в S3/MinIO, в Kafka пиши только ссылку.</div>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">❌</div>
+          <div class="step-content">
+            <div class="step-title">Не настроены алерты на Consumer Lag</div>
+            <div class="step-desc">Если lag растёт — Consumer не справляется. Нужно добавить consumer-ов или оптимизировать обработку.</div>
+          </div>
+        </div>
+      </div>
+
+      <h2>Продакшн чеклист</h2>
+      <div class="card success">
+        <div class="card-title">✅ Минимальный чеклист для продакшна</div>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:var(--text2);">
+          <li>☐ Минимум 3 broker-а</li>
+          <li>☐ replication.factor=3, min.insync.replicas=2</li>
+          <li>☐ Настроен мониторинг (Prometheus + Grafana)</li>
+          <li>☐ Настроены алерты на Consumer Lag и Under-Replicated Partitions</li>
+          <li>☐ Ручной commit offset для критичных сервисов</li>
+          <li>☐ Настроен retention.ms под объём данных</li>
+          <li>☐ Документированы все topic-ы и их схемы</li>
+          <li>☐ Настроен Schema Registry (для Avro/Protobuf)</li>
+        </ul>
+      </div>
+
+      <h2>Инструменты для мониторинга</h2>
+      <div class="concept-grid">
+        <div class="concept-card">
+          <div class="concept-icon">📊</div>
+          <div class="concept-name">Kafka UI</div>
+          <div class="concept-desc">Бесплатный веб-интерфейс. Отлично для старта.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🔥</div>
+          <div class="concept-name">Prometheus + Grafana</div>
+          <div class="concept-desc">Стандарт для мониторинга в продакшне.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">🏢</div>
+          <div class="concept-name">Confluent Control Center</div>
+          <div class="concept-desc">Enterprise решение с расширенным мониторингом.</div>
+        </div>
+        <div class="concept-card">
+          <div class="concept-icon">⚡</div>
+          <div class="concept-name">Burrow</div>
+          <div class="concept-desc">Специализированный мониторинг Consumer Lag.</div>
+        </div>
+      </div>
+
+      <h2>Что изучать дальше?</h2>
+      <div class="card info">
+        <div class="card-title">🚀 Следующие шаги</div>
+        <ul style="margin:0;padding-left:20px;font-size:13.5px;color:var(--text2);">
+          <li><strong>Schema Registry</strong> — контроль версий схем сообщений (Avro/Protobuf)</li>
+          <li><strong>ksqlDB</strong> — SQL-запросы к потокам данных</li>
+          <li><strong>Kafka в Kubernetes</strong> — Strimzi operator для K8s деплоя</li>
+          <li><strong>Confluent Cloud</strong> — управляемая Kafka в облаке</li>
+          <li><strong>Apache Flink + Kafka</strong> — сложная потоковая аналитика</li>
+        </ul>
+      </div>
+
+      <div class="card success">
+        <div class="card-title">🎉 Поздравляем! Ты прошёл курс!</div>
+        <p style="margin:0;font-size:13.5px">Ты разобрался в основах Kafka, научился запускать её локально, писать Producer и Consumer, понимаешь архитектуру и знаешь как она работает в продакшне. Это отличная база для работы с реальными системами!</p>
+      </div>
+    </div>
+    <div class="lesson-nav">
+      <button class="btn btn-secondary" onclick="showLesson('11')">← Назад</button>
+      <button class="btn btn-primary" onclick="showLesson('home')">🏠 На главную</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const TOTAL_LESSONS = 12;
+  const completed = new Set();
+
+  function showLesson(id) {
+    document.querySelectorAll('.lesson').forEach(l => l.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('lesson-' + id).classList.add('active');
+    const navItem = document.querySelector(`[data-lesson="${id}"]`);
+    if (navItem) navItem.classList.add('active');
+    window.scrollTo(0, 0);
+    document.getElementById('sidebar').classList.remove('open');
+  }
+
+  function completeAndNext(current, next) {
+    completed.add(current);
+    const navItem = document.querySelector(`[data-lesson="${current}"]`);
+    if (navItem) navItem.classList.add('done');
+    updateProgress();
+    showLesson(next);
+  }
+
+  function updateProgress() {
+    const pct = Math.round((completed.size / TOTAL_LESSONS) * 100);
+    document.getElementById('progress-fill').style.width = pct + '%';
+    document.getElementById('progress-pct').textContent = pct + '%';
+  }
+
+  function checkQuiz(el, correct, quizId) {
+    const opts = el.parentElement.querySelectorAll('.quiz-opt');
+    opts.forEach(o => o.classList.add('disabled'));
+    el.classList.add(correct ? 'correct' : 'wrong');
+    if (!correct) {
+      opts.forEach(o => {
+        if (o.onclick.toString().includes('true')) o.classList.add('correct');
+      });
+    }
+    const res = document.getElementById(quizId + '-result');
+    res.classList.add('show');
+    if (correct) {
+      res.className = 'quiz-result show correct-res';
+      res.textContent = '✅ Правильно! ' + getExplanation(quizId, true);
+    } else {
+      res.className = 'quiz-result show wrong-res';
+      res.textContent = '❌ Неправильно. ' + getExplanation(quizId, false);
+    }
+  }
+
+  function getExplanation(quizId, correct) {
+    const explanations = {
+      q1: correct ? 'Именно! Kafka выступает посредником — сервисы не знают друг о друге, это и есть слабая связанность.' : 'Главное преимущество — не скорость, а независимость сервисов.',
+      q2: correct ? 'Верно! hash(user_id) % num_partitions всегда даст одну partition для одного пользователя.' : 'Порядок гарантируется только внутри partition. Один пользователь = один ключ = одна partition.',
+      q3: correct ? 'Верно! Данные безопасны — именно для этого и нужна репликация.' : 'Репликация существует именно для этого случая!',
+      q4: correct ? 'Верно! --from-beginning читает с самого первого сообщения в topic.' : 'Правильный флаг — --from-beginning.',
+      q5: correct ? 'Верно! Для метрик потеря нескольких значений некритична, зато скорость важна.' : 'Для некритичных данных acks=all избыточен.',
+      q6: correct ? 'Верно! Offset не закоммичен = Kafka "думает", что сообщение не прочитано.' : 'Именно поэтому важен ручной commit: commit = "я обработал".',
+      q7: correct ? 'Верно! Log Compaction — для хранения последнего состояния объектов.' : 'cleanup.policy=compact оставляет только последнее сообщение по ключу.',
+      q8: correct ? 'Верно! Partition — это единица параллельности. Больше consumer-ов чем partition = простой.' : '4 partition = максимум 4 active consumer-а в группе.',
+      q9: correct ? 'Верно! Exactly-once с транзакциями — единственный способ гарантировать ровно одну обработку.' : 'Для финансов нужен exactly-once — транзакции и идемпотентный Producer.',
+    };
+    return explanations[quizId] || '';
+  }
+
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+  }
+</script>
+</body>
+</html>
