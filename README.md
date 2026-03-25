@@ -1,2 +1,2 @@
-# course_kafka
 Apache Kafka — Full Course in Russian
+A complete, interactive Kafka course designed for Russian-speaking developers. From zero to production-ready knowledge across 12 structured lessons — covering core concepts, hands-on coding, deep dives into partitions, consumer groups, reliability guarantees, Kafka Streams, Kafka Connect, and production best practices. Each lesson includes real Python code examples, visual diagrams, and a built-in quiz to reinforce learning. No English required.
